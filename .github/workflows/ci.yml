@@ -86,4 +86,4 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build bootBuildImage
-        run: ./gradlew --no-daemon bootBuildImage --imageName=habit-tracker:${{ github.sha }} -x test
+        run: ./gradlew --no-daemon bootBuildImage --imageName=habit-tracker:${{ github.sha }}
