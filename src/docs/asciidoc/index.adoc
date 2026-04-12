@@ -17,6 +17,100 @@ README see link:../../docs/badge-guide.md[docs/badge-guide.md].
 These snippets are the *contract tests*. If a snapshot breaks here, the behavior that
 downstream users rely on has changed — update the docs together with the code.
 
+== Auth
+
+=== `POST /api/v1/auth/signup`
+
+.Request
+include::{snippets}/auth-signup/http-request.adoc[]
+
+.Request fields
+include::{snippets}/auth-signup/request-fields.adoc[]
+
+.Response
+include::{snippets}/auth-signup/http-response.adoc[]
+
+.Response fields
+include::{snippets}/auth-signup/response-fields.adoc[]
+
+=== `POST /api/v1/auth/login`
+
+.Request
+include::{snippets}/auth-login/http-request.adoc[]
+
+.Request fields
+include::{snippets}/auth-login/request-fields.adoc[]
+
+.Response
+include::{snippets}/auth-login/http-response.adoc[]
+
+.Response fields
+include::{snippets}/auth-login/response-fields.adoc[]
+
+== Habits
+
+=== `GET /api/v1/habits`
+
+Lists the caller's habits joined with current streak data.
+
+.Request
+include::{snippets}/habit-list/http-request.adoc[]
+
+.Response
+include::{snippets}/habit-list/http-response.adoc[]
+
+.Response fields
+include::{snippets}/habit-list/response-fields.adoc[]
+
+=== `POST /api/v1/habits`
+
+.Request
+include::{snippets}/habit-create/http-request.adoc[]
+
+.Request fields
+include::{snippets}/habit-create/request-fields.adoc[]
+
+.Response
+include::{snippets}/habit-create/http-response.adoc[]
+
+.Response fields
+include::{snippets}/habit-create/response-fields.adoc[]
+
+=== `DELETE /api/v1/habits/{habitId}`
+
+Cascade delete: badges → stats → check-ins → streak → habit, single transaction.
+
+.Request
+include::{snippets}/habit-delete/http-request.adoc[]
+
+.Path parameters
+include::{snippets}/habit-delete/path-parameters.adoc[]
+
+.Response
+include::{snippets}/habit-delete/http-response.adoc[]
+
+== Check-ins
+
+=== `POST /api/v1/habits/{habitId}/check-ins`
+
+Redis `SETNX` dedup + DB unique constraint double defense. Returns the
+created check-in and a fresh streak snapshot.
+
+.Request
+include::{snippets}/checkin-create/http-request.adoc[]
+
+.Path parameters
+include::{snippets}/checkin-create/path-parameters.adoc[]
+
+.Request fields
+include::{snippets}/checkin-create/request-fields.adoc[]
+
+.Response
+include::{snippets}/checkin-create/http-response.adoc[]
+
+.Response fields
+include::{snippets}/checkin-create/response-fields.adoc[]
+
 == Badges (public SVG)
 
 === `GET /api/v1/badges/{token}/calendar.svg`
