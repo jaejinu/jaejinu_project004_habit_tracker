@@ -152,83 +152,101 @@ On exceed:
 
 # Habits
 
-> **Status: service exists, controller TODO.**
-> `HabitService` (`com.habit.domain.habit.HabitService`) implements all
-> CRUD operations but no REST controller currently exposes them. The
-> shapes below describe the planned contract; for now, create habits
-> directly via the service layer / seed data.
+Implemented by `HabitController` at `com.habit.api.HabitController`. All endpoints require a Bearer token.
 
-### `GET /api/v1/habits` *(planned)*
+### `GET /api/v1/habits`
 
 - **Auth**: Bearer
-- **Response**: array of `HabitDto` owned by the caller.
+- **Response**: `HabitResponse[]` — the caller's habits joined with current streak data.
 
   ```json
   [
     {
       "id": 10,
-      "title": "매일 코딩 1시간",
-      "color": "2da44e",
+      "title": "매일 코딩",
+      "description": "1시간 이상",
+      "color": "#2da44e",
       "icon": "💻",
       "frequency": "DAILY",
+      "targetDays": null,
       "isPublic": true,
-      "startDate": "2026-01-01"
+      "startDate": "2026-01-01",
+      "endDate": null,
+      "currentStreak": 7,
+      "longestStreak": 21,
+      "totalDays": 54
     }
   ]
   ```
 
-### `POST /api/v1/habits` *(planned — maps to `HabitService.create`)*
+### `GET /api/v1/habits/{habitId}`
 
+- **Auth**: Bearer
+- **Response**: single `HabitResponse` (same shape as list item).
+- **Errors**: `404 HABIT_404` when the habit doesn't exist or isn't owned by the caller.
+
+### `POST /api/v1/habits`
+
+- **Auth**: Bearer
 - **Body**:
 
   ```json
   {
-    "title": "매일 코딩 1시간",
+    "title": "매일 코딩",
+    "description": "1시간 이상",
+    "color": "#216e39",
+    "icon": "💻",
     "frequency": "DAILY",
-    "startDate": "2026-01-01"
+    "targetDays": null,
+    "startDate": "2026-04-12",
+    "endDate": null
   }
   ```
 
-- **Response `201`**: created habit.
+  - `title` required (≤ 100 chars), `frequency` required, `startDate` required.
+  - `color` must match `^#[0-9a-fA-F]{6}$` when provided; defaults to `#216e39`.
+  - `targetDays` and `endDate` are accepted by the DTO but not yet persisted by the service — tracked as a TODO inside `HabitController`.
 
-### `PATCH /api/v1/habits/{habitId}` *(planned — `updateBasic` / `togglePublic`)*
+- **Response `201 Created`** + `Location: /api/v1/habits/{id}` header; body is the created `HabitResponse`.
 
-- **Body** (all fields optional):
+### `PATCH /api/v1/habits/{habitId}`
+
+- **Auth**: Bearer
+- **Body** (any field null means "keep current"):
 
   ```json
   {
     "title": "매일 코딩 2시간",
-    "description": "...",
-    "color": "ff9800",
-    "icon": "⌨️",
-    "isPublic": true
+    "description": "업데이트",
+    "color": "#ff9800",
+    "icon": "⌨️"
   }
   ```
 
-- **Errors**:
+- **Errors**: `404 HABIT_404`, `400 COMMON_400` (validation), e.g. invalid color hex.
 
-  | Status | Code | When |
-  |---|---|---|
-  | 404 | `HABIT_404` | 습관이 존재하지 않거나 소유자가 아님 |
-  | 400 | `COMMON_400` | 유효성 실패 |
+### `PATCH /api/v1/habits/{habitId}/visibility`
 
-### `DELETE /api/v1/habits/{habitId}` *(planned)*
+- **Auth**: Bearer
+- **Body**: `{ "isPublic": true }`
+- **Response**: updated `HabitResponse`.
 
-- **Response `204`** on success.
+### `DELETE /api/v1/habits/{habitId}`
+
+- **Auth**: Bearer
+- **Response `204`**. Cascade: SharedBadges → HabitStats → CheckIns → Streak → Habit (single transaction).
+- **Errors**: `404 HABIT_404`.
 
 ---
 
 # Check-ins
 
-> **Status: service exists, controller TODO.**
-> `CheckInService.checkIn(userId, habitId, date, note, mood)` is fully
-> implemented (including Redis dedup + streak update). The REST
-> controller that wraps it is not wired yet.
+Implemented by `CheckInController` at `com.habit.api.CheckInController`. All endpoints require a Bearer token.
 
-### `POST /api/v1/habits/{habitId}/check-ins` *(planned)*
+### `POST /api/v1/habits/{habitId}/check-ins`
 
 - **Auth**: Bearer
-- **Body**:
+- **Body** (all fields optional — if `checkedDate` is omitted, defaults to today UTC):
 
   ```json
   {
@@ -238,9 +256,9 @@ On exceed:
   }
   ```
 
-  `mood` ∈ `GREAT | GOOD | OKAY | BAD` (see `Mood`).
+  `mood` ∈ `GREAT | GOOD | OKAY | BAD`.
 
-- **Response `200`**:
+- **Response `201 Created`** + `Location: /api/v1/habits/{habitId}/check-ins/{date}` header; body is `CheckInCreateResponse`:
 
   ```json
   {
@@ -252,9 +270,10 @@ On exceed:
       "mood": "GOOD"
     },
     "streak": {
-      "habitId": 10,
       "currentStreak": 7,
-      "longestStreak": 21
+      "longestStreak": 21,
+      "totalDays": 54,
+      "lastCheckedDate": "2026-04-12"
     }
   }
   ```
@@ -263,9 +282,22 @@ On exceed:
 
   | Status | Code | When |
   |---|---|---|
-  | 409 | `CHECKIN_409` | 해당 날짜에 이미 체크인함 |
-  | 400 | `CHECKIN_400_RANGE` | 습관 시작일 이전 등 허용 범위 밖 |
+  | 409 | `CHECKIN_409` | 해당 날짜에 이미 체크인함 (Redis SETNX 선점 + DB 유니크 제약 이중 방어) |
+  | 400 | `CHECKIN_400_RANGE` | 습관의 `startDate`~`endDate` 범위 밖 |
   | 404 | `HABIT_404` | 습관이 존재하지 않거나 소유자가 아님 |
+
+### `GET /api/v1/habits/{habitId}/check-ins?from=&to=`
+
+- **Auth**: Bearer
+- **Query params**: `from`, `to` (ISO dates, optional). Default window: `[today - 29, today]` UTC.
+- **Response**: `CheckInResponse[]`.
+
+### `PATCH /api/v1/habits/{habitId}/check-ins/{date}`
+
+- **Auth**: Bearer
+- **Body**: `{ "note": "수정된 메모", "mood": "GREAT" }` — both optional.
+- **Response**: updated `CheckInResponse`.
+- **Errors**: `404 HABIT_404` or `404 COMMON_404` (check-in not found), `403 COMMON_403` (check-in belongs to another user — shouldn't happen when ownership check passes, but enforced defensively).
 
 ---
 

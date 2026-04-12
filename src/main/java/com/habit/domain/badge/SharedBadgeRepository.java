@@ -16,4 +16,8 @@ public interface SharedBadgeRepository extends JpaRepository<SharedBadge, Long> 
     @Modifying
     @Query("UPDATE SharedBadge s SET s.viewCount = s.viewCount + 1 WHERE s.publicToken = :token")
     int incrementViewCount(@Param("token") String token);
+
+    @Modifying
+    @Query("DELETE FROM SharedBadge s WHERE s.habitId = :habitId")
+    int deleteAllByHabitId(@Param("habitId") Long habitId);
 }

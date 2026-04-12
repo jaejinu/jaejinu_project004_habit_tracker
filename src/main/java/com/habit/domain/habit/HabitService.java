@@ -2,6 +2,8 @@ package com.habit.domain.habit;
 
 import com.habit.common.exception.BusinessException;
 import com.habit.common.exception.ErrorCode;
+import com.habit.domain.badge.SharedBadgeRepository;
+import com.habit.domain.stats.HabitStatsRepository;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,9 @@ public class HabitService {
 
     private final HabitRepository habitRepository;
     private final StreakRepository streakRepository;
+    private final CheckInRepository checkInRepository;
+    private final HabitStatsRepository habitStatsRepository;
+    private final SharedBadgeRepository sharedBadgeRepository;
 
     public List<Habit> listMine(Long userId) {
         return habitRepository.findAllByUserId(userId);
@@ -48,5 +53,15 @@ public class HabitService {
         Habit habit = get(userId, habitId);
         habit.togglePublic(isPublic);
         return habit;
+    }
+
+    @Transactional
+    public void delete(Long userId, Long habitId) {
+        Habit habit = get(userId, habitId);
+        sharedBadgeRepository.deleteAllByHabitId(habitId);
+        habitStatsRepository.deleteAllByHabitId(habitId);
+        checkInRepository.deleteAllByHabitId(habitId);
+        streakRepository.findByHabitId(habitId).ifPresent(streakRepository::delete);
+        habitRepository.delete(habit);
     }
 }

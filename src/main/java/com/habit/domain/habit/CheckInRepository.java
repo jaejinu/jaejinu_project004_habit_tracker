@@ -4,10 +4,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
+
+    @Modifying
+    @Query("DELETE FROM CheckIn c WHERE c.habitId = :habitId")
+    int deleteAllByHabitId(@Param("habitId") Long habitId);
 
     Optional<CheckIn> findByHabitIdAndCheckedDate(Long habitId, LocalDate date);
 

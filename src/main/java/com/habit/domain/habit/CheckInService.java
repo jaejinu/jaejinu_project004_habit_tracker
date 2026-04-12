@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -73,6 +74,25 @@ public class CheckInService {
             redis.delete(dedupKey);
             throw e;
         }
+    }
+
+    public List<CheckIn> list(Long userId, Long habitId, LocalDate from, LocalDate to) {
+        habitRepository.findByIdAndUserId(habitId, userId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.HABIT_NOT_FOUND));
+        return checkInRepository.findAllByHabitIdAndCheckedDateBetween(habitId, from, to);
+    }
+
+    @Transactional
+    public CheckIn updateNoteAndMood(Long userId, Long habitId, LocalDate date, String note, Mood mood) {
+        habitRepository.findByIdAndUserId(habitId, userId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.HABIT_NOT_FOUND));
+        CheckIn ci = checkInRepository.findByHabitIdAndCheckedDate(habitId, date)
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        if (!ci.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        ci.updateNote(note, mood);
+        return ci;
     }
 
     public record CheckInResult(CheckIn checkIn, Streak streak) {}

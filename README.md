@@ -86,6 +86,12 @@ src/main/java/com/habit/
   - 메트릭: `habit.checkin.total`, `habit.streak.broken.total`, `habit.stats.aggregation.{duration,rows}`, `badge.svg.cache.{hit,miss}.total{type}`, `badge.svg.generation.duration{type}`
   - 스케줄러 토글: `app.scheduler.enabled` (기본 true, 테스트에서 false 설정 가능)
   - 설계 문서: `docs/design/step4-scheduler.md`
+- [x] **6단계** — Habit CRUD + Check-In 컨트롤러 완성
+  - `HabitController`: `GET /api/v1/habits`, `GET/PATCH/DELETE /{habitId}`, `POST`, `PATCH /{habitId}/visibility`
+  - `CheckInController`: `POST /api/v1/habits/{habitId}/check-ins`, `GET` (기본 윈도우 `[today-29, today]` UTC), `PATCH /{date}`
+  - `HabitService.delete`: cascade (badges → stats → check-ins → streak → habit) 단일 트랜잭션
+  - `CheckInRepository`/`HabitStatsRepository`/`SharedBadgeRepository`에 `@Modifying deleteAllByHabitId` 추가
+  - 설계 문서: `docs/design/step6-crud.md`
 - [x] **5단계** — 문서화 (OpenAPI + Markdown 가이드)
   - 컨트롤러 전체에 `@Tag/@Operation/@Parameter/@ApiResponse` 어노테이션 — Swagger UI 풍부화
   - `OpenApiConfig`: 서버 목록 + `bearerAuth` (JWT) 시큐리티 스키마 전역 적용
