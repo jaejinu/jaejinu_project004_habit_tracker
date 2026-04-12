@@ -1,6 +1,5 @@
 package com.habit.api;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -12,13 +11,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.habit.domain.badge.PublicBadgeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.habit.infra.security.JwtAuthenticationFilter;
+import com.habit.infra.security.RateLimitFilter;
 
 /**
  * Sample integration test for BadgeController — demonstrates the shape of a future
@@ -26,8 +29,14 @@ import org.springframework.test.web.servlet.MockMvc;
  * docs/design/step5-docs.md "Surface 3"). When wired, replace the plain MockMvc
  * assertions with `.andDo(document("badge-calendar", ...))` calls.
  */
-@WebMvcTest(BadgeController.class)
-@Import(BadgeControllerDocsTest.DisableSecurity.class)
+@WebMvcTest(
+    controllers = BadgeController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {JwtAuthenticationFilter.class, RateLimitFilter.class}
+    )
+)
+@AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
     "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
     "app.scheduler.enabled=false"
@@ -65,10 +74,5 @@ class BadgeControllerDocsTest {
                 .header(HttpHeaders.IF_NONE_MATCH, etag))
             .andExpect(status().isNotModified())
             .andExpect(header().string(HttpHeaders.ETAG, etag));
-    }
-
-    @TestConfiguration
-    static class DisableSecurity {
-        // WebMvcTest only boots the controller slice; security autoconfig is excluded above.
     }
 }

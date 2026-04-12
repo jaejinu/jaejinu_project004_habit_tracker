@@ -56,6 +56,13 @@ public class HabitService {
     }
 
     @Transactional
+    public Habit updateSchedule(Long userId, Long habitId, Integer targetDays, LocalDate endDate) {
+        Habit habit = get(userId, habitId);
+        habit.updateSchedule(targetDays, endDate);
+        return habit;
+    }
+
+    @Transactional
     public void delete(Long userId, Long habitId) {
         Habit habit = get(userId, habitId);
         sharedBadgeRepository.deleteAllByHabitId(habitId);

@@ -26,7 +26,7 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
                  checked_date - (ROW_NUMBER() OVER (ORDER BY checked_date))::int AS grp
           FROM check_ins
           WHERE habit_id = :habitId
-            AND checked_date <= :today
+            AND checked_date <= CAST(:today AS DATE)
         ),
         groups AS (
           SELECT grp, COUNT(*) AS len, MAX(checked_date) AS last_date
@@ -35,8 +35,8 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
         )
         SELECT COALESCE(
           (SELECT len FROM groups
-            WHERE last_date = :today
-               OR last_date = :today - INTERVAL '1 day'
+            WHERE last_date = CAST(:today AS DATE)
+               OR last_date = CAST(:today AS DATE) - 1
             ORDER BY last_date DESC LIMIT 1),
           0
         )

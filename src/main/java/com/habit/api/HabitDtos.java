@@ -27,7 +27,9 @@ public final class HabitDtos {
         @Size(max = 100) String title,
         @Size(max = 500) String description,
         @Pattern(regexp = "^#[0-9a-fA-F]{6}$") String color,
-        @Size(max = 16) String icon
+        @Size(max = 16) String icon,
+        Integer targetDays,
+        LocalDate endDate
     ) {}
 
     public record VisibilityRequest(@NotNull Boolean isPublic) {}

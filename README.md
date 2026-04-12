@@ -1,5 +1,7 @@
 # Habit Tracker API
 
+[![CI](https://github.com/jaejinu/jaejinu_project004_habit_tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/jaejinu/jaejinu_project004_habit_tracker/actions/workflows/ci.yml)
+
 GitHub 잔디 스타일 습관 트래커 공개 API.
 매일 체크인하면 53주 × 7일 SVG 캘린더와 스트릭 뱃지를 외부 README에 삽입할 수 있습니다.
 
@@ -18,12 +20,14 @@ GitHub 잔디 스타일 습관 트래커 공개 API.
 # 1. 인프라 컨테이너 기동 (Postgres, Redis, Prometheus, Grafana)
 docker compose up -d
 
-# 2. Gradle wrapper 생성 (최초 1회 - 시스템에 gradle 설치 필요 or IntelliJ에서 Sync)
-gradle wrapper --gradle-version 8.10
-
-# 3. 앱 실행
+# 2. 앱 실행
 ./gradlew bootRun
+
+# 3. 테스트 (단위 + Testcontainers Postgres 통합)
+./gradlew test
 ```
+
+> 테스트에는 Docker 데몬이 필요합니다 (Testcontainers Postgres 16).
 
 실행 후 확인:
 
@@ -92,6 +96,12 @@ src/main/java/com/habit/
   - `HabitService.delete`: cascade (badges → stats → check-ins → streak → habit) 단일 트랜잭션
   - `CheckInRepository`/`HabitStatsRepository`/`SharedBadgeRepository`에 `@Modifying deleteAllByHabitId` 추가
   - 설계 문서: `docs/design/step6-crud.md`
+- [x] **7단계** — 빌드/테스트 검증 + CI
+  - Gradle wrapper 8.10.1 생성, `./gradlew test` 전체 통과 (9 tests)
+  - `@EnableJpaAuditing`을 `infra/persistence/JpaConfig`로 분리 → `@WebMvcTest` 슬라이스 호환
+  - PostgreSQL 네이티브 쿼리에 명시적 `CAST(:today AS DATE)` — JDBC 파라미터 타입 추론 오류 방지
+  - Testcontainers Postgres 16 기반 통합 테스트 `CheckInRepositoryIntegrationTest` — LAG 스트릭 쿼리 7 케이스
+  - GitHub Actions CI (`.github/workflows/ci.yml`): Java 21 + Gradle + Testcontainers + Docker 이미지 빌드 (main만)
 - [x] **5단계** — 문서화 (OpenAPI + Markdown 가이드)
   - 컨트롤러 전체에 `@Tag/@Operation/@Parameter/@ApiResponse` 어노테이션 — Swagger UI 풍부화
   - `OpenApiConfig`: 서버 목록 + `bearerAuth` (JWT) 시큐리티 스키마 전역 적용

@@ -79,8 +79,12 @@ Redis holds a short-lived dedup key (`habit:checkin:{...}:{date}` with ~2m TTL) 
 ## Testing
 
 - Unit tests for pure logic (streak math, SVG string generation).
-- Integration tests for JPA + native queries use **Testcontainers Postgres** (already on the test classpath). Do not rely on H2 for LAG-based queries.
-- Spring REST Docs for API documentation — assert response structure in tests, snippets get assembled into `docs/`.
+- Integration tests for JPA + native queries use **Testcontainers Postgres 16** — see `src/test/java/com/habit/support/AbstractPostgresIntegrationTest.java`. The container is reused across the JVM (`TESTCONTAINERS_REUSE_ENABLE=true`).
+- Slice-test pattern: `@DataJpaTest + @AutoConfigureTestDatabase(Replace.NONE) + @Import(JpaConfig.class) + extends AbstractPostgresIntegrationTest`. Without `@Import(JpaConfig)`, auditing is off and `created_at` is null because `@EnableJpaAuditing` lives on `infra/persistence/JpaConfig` (NOT on the main `@SpringBootApplication`, so slice tests don't pull in JPA unexpectedly).
+- For `@WebMvcTest`: exclude the custom filters with `excludeFilters` + `@AutoConfigureMockMvc(addFilters = false)`, and add `spring.autoconfigure.exclude=...SecurityAutoConfiguration,...RedisAutoConfiguration` to keep the slice minimal.
+- Docker daemon is required for all Testcontainers suites and for CI. CI job `.github/workflows/ci.yml` runs test + bootJar + (on main) `bootBuildImage`.
+- Native PostgreSQL queries with `LocalDate` params: always cast explicitly (`CAST(:today AS DATE)`) because the JDBC driver infers the parameter type as unknown when arithmetic is applied (`:today - 1`). Without the cast, comparisons to date columns throw `operator does not exist: date = integer`.
+- Spring REST Docs for API documentation — assert response structure in tests, snippets get assembled into `docs/` (deferred; see step 5 design doc).
 
 ## Public Badge Endpoints
 

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -76,7 +77,9 @@ public class HabitController {
                 req.icon()
             );
         }
-        // TODO: extend HabitService to set targetDays/endDate
+        if (req.targetDays() != null || req.endDate() != null) {
+            habit = habitService.updateSchedule(userId, habit.getId(), req.targetDays(), req.endDate());
+        }
         HabitResponse body = toResponse(habit);
         return ResponseEntity
             .created(URI.create("/api/v1/habits/" + habit.getId()))
@@ -98,6 +101,11 @@ public class HabitController {
         String color = req.color() != null ? req.color() : current.getColor();
         String icon = req.icon() != null ? req.icon() : current.getIcon();
         Habit updated = habitService.updateBasic(userId, habitId, title, description, color, icon);
+        if (req.targetDays() != null || req.endDate() != null) {
+            Integer targetDays = req.targetDays() != null ? req.targetDays() : current.getTargetDays();
+            LocalDate endDate = req.endDate() != null ? req.endDate() : current.getEndDate();
+            updated = habitService.updateSchedule(userId, habitId, targetDays, endDate);
+        }
         return toResponse(updated);
     }
 

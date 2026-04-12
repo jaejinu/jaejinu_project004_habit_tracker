@@ -32,7 +32,7 @@ public class DailyStatsAggregationJob {
     @Scheduled(cron = "0 5 2 * * *", zone = "UTC")
     @Transactional
     public void run() {
-        Timer.Sample sample = Timer.Sample.start(meterRegistry);
+        Timer.Sample sample = Timer.start(meterRegistry);
         try {
             LocalDate today = LocalDate.now(ZoneOffset.UTC);
             LocalDate yesterday = today.minusDays(1);

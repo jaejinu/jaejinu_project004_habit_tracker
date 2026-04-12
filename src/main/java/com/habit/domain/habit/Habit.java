@@ -83,6 +83,11 @@ public class Habit extends BaseTimeEntity {
         this.isPublic = isPublic;
     }
 
+    public void updateSchedule(Integer targetDays, LocalDate endDate) {
+        this.targetDays = targetDays;
+        this.endDate = endDate;
+    }
+
     public boolean isActiveOn(LocalDate date) {
         return !startDate.isAfter(date) && (endDate == null || !date.isAfter(endDate));
     }
