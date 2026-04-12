@@ -32,6 +32,7 @@ docker compose up -d
 실행 후 확인:
 
 - Swagger UI: http://localhost:8080/swagger-ui.html
+- REST Docs HTML: http://localhost:8080/docs/index.html (Spring REST Docs 스냅샷)
 - Actuator Health: http://localhost:8080/actuator/health
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000 (admin/admin)

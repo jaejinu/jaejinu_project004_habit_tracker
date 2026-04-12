@@ -42,3 +42,6 @@ logs/
 
 ### Claude Code local settings ###
 .claude/
+
+### Generated REST Docs ###
+build/generated-snippets/

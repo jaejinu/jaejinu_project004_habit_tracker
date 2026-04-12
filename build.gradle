@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'org.asciidoctor.jvm.convert' version '4.0.3'
 }
 
 group = 'com.habit'
@@ -74,8 +75,39 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+ext {
+    snippetsDir = file("build/generated-snippets")
+}
+
+configurations {
+    asciidoctorExt
+}
+
+dependencies {
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+}
+
 tasks.named('test') {
     useJUnitPlatform()
+    outputs.dir snippetsDir
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    configurations 'asciidoctorExt'
+    dependsOn test
+    sources {
+        include 'index.adoc'
+    }
+    baseDirFollowsSourceFile()
+}
+
+tasks.named('bootJar') {
+    dependsOn 'asciidoctor'
+    from("${buildDir}/docs/asciidoc") {
+        into 'BOOT-INF/classes/static/docs'
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 // Querydsl Q-class 생성 경로

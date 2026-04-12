@@ -1,0 +1,43 @@
+= Habit Tracker API — Reference (generated)
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+:docinfo: shared
+:snippets: {snippets}
+
+Generated from Spring REST Docs snapshot tests on every CI run. For the narrative guide
+see link:../../docs/api-reference.md[docs/api-reference.md]; for embedding badges in a
+README see link:../../docs/badge-guide.md[docs/badge-guide.md].
+
+== Status
+
+These snippets are the *contract tests*. If a snapshot breaks here, the behavior that
+downstream users rely on has changed — update the docs together with the code.
+
+== Badges (public SVG)
+
+=== `GET /api/v1/badges/{token}/calendar.svg`
+
+53×7 GitHub-grass calendar. Public, heavily cached (1h), exempt from rate limiting.
+
+.Request
+include::{snippets}/badge-calendar/http-request.adoc[]
+
+.Response
+include::{snippets}/badge-calendar/http-response.adoc[]
+
+.Response headers
+include::{snippets}/badge-calendar/response-headers.adoc[]
+
+=== Conditional request (ETag / 304)
+
+When `If-None-Match` matches the ETag from a prior response, the server returns `304 Not Modified` with no body.
+
+.Request
+include::{snippets}/badge-calendar-304/http-request.adoc[]
+
+.Response
+include::{snippets}/badge-calendar-304/http-response.adoc[]

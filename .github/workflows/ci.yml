@@ -49,14 +49,21 @@ jobs:
             build/test-results/test
           retention-days: 7
 
-      - name: Build bootJar
-        run: ./gradlew --no-daemon bootJar -x test
+      - name: Build bootJar (+ REST Docs asciidoctor)
+        run: ./gradlew --no-daemon bootJar
 
       - name: Upload bootJar artifact
         uses: actions/upload-artifact@v4
         with:
           name: habit-tracker-jar
           path: build/libs/*.jar
+          retention-days: 7
+
+      - name: Upload generated API reference (asciidoctor)
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-reference-html
+          path: build/docs/asciidoc/
           retention-days: 7
 
   docker-image:
