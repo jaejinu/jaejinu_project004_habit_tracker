@@ -103,14 +103,48 @@ src/main/java/com/habit/
   - PostgreSQL 네이티브 쿼리에 명시적 `CAST(:today AS DATE)` — JDBC 파라미터 타입 추론 오류 방지
   - Testcontainers Postgres 16 기반 통합 테스트 `CheckInRepositoryIntegrationTest` — LAG 스트릭 쿼리 7 케이스
   - GitHub Actions CI (`.github/workflows/ci.yml`): Java 21 + Gradle + Testcontainers + Docker 이미지 빌드 (main만)
-- [x] **5단계** — 문서화 (OpenAPI + Markdown 가이드)
+- [x] **5단계** — 문서화 (OpenAPI + Markdown 가이드 + Spring REST Docs)
   - 컨트롤러 전체에 `@Tag/@Operation/@Parameter/@ApiResponse` 어노테이션 — Swagger UI 풍부화
   - `OpenApiConfig`: 서버 목록 + `bearerAuth` (JWT) 시큐리티 스키마 전역 적용
   - `docs/api-reference.md` — 엔드포인트 레퍼런스
   - `docs/badge-guide.md` — README 삽입 5분 퀵스타트
   - `examples/readme-example.md` — 복붙 가능한 샘플 README
-  - 샘플 테스트 `BadgeControllerDocsTest` (full Spring REST Docs asciidoc 은 follow-up)
+  - Spring REST Docs asciidoctor 파이프라인: `Auth`/`Habit`/`CheckIn`/`Badge` 스냅샷 테스트, `bootJar` 가 `/docs/index.html` 임베드 (`src/docs/asciidoc/index.adoc`)
+  - CI가 `api-reference-html` 아티팩트로 생성 HTML 업로드
   - 설계 문서: `docs/design/step5-docs.md`
+- [x] **8단계** — 운영 자동화 (Dependabot + `.gitattributes`)
+  - `.github/dependabot.yml` — 주간 Gradle/Actions/Docker 업데이트, Spring/Testing 그룹핑
+  - 1차 반영: jjwt 0.12→0.13, testcontainers 1.20→1.21, actions/checkout v4→v6, upload-artifact v4→v7, gradle/actions v4→v6
+  - `.gitattributes` — `gradlew` LF + exec bit 보존, 텍스트 파일 eol=lf 강제
+  - `@ConfigurationPropertiesScan` 으로 `JwtProperties`/`RateLimitProperties` 표준화
+
+## 남은 작업 (Backlog)
+
+우선순위 순. GitHub Issues 로 트래킹 중이며 PR 으로 각각 진행 가능.
+
+1. **Spring Boot 4.0.5 마이그레이션** (보류 PR [#4](https://github.com/jaejinu/jaejinu_project004_habit_tracker/pull/4))
+   - 메이저 버전 점프: Spring Framework 7 baseline, Jackson 3.1, `@MockBean` deprecation 등.
+   - 테스트 슬라이스 전체 재검증 필요.
+
+2. **Gradle 9.4.1 업그레이드** (보류 PR [#7](https://github.com/jaejinu/jaejinu_project004_habit_tracker/pull/7))
+   - `org.asciidoctor.jvm.convert` / `spring-boot` 플러그인 호환성 확인 후 머지.
+
+3. **프로덕션 시크릿 주입 전략 결정** ([#9](https://github.com/jaejinu/jaejinu_project004_habit_tracker/issues/9))
+   - `application-prod.yml` 의 `JWT_SECRET`, `DB_PASSWORD`, `REDIS_PASSWORD` 가 현재는 플레인 `${...}` 환경변수.
+   - AWS SecretsManager / GitHub OIDC / Doppler 등 선택 필요.
+
+4. **뱃지 스크린샷 작성** ([#10](https://github.com/jaejinu/jaejinu_project004_habit_tracker/issues/10))
+   - `docs/badge-guide.md` 의 `<!-- TODO: insert screenshots -->` 자리에 light/dark × {calendar, streak, total} 스크린샷 삽입.
+   - 앱을 띄워 실제 Chrome 캡처 필요.
+
+5. **REST Docs 스냅샷 확장** ([#11](https://github.com/jaejinu/jaejinu_project004_habit_tracker/issues/11))
+   - 현재 커버: Auth signup/login, Habit list/create/delete, CheckIn create, Badge calendar ×2 (200+304).
+   - 미커버: Habit get/update/visibility, CheckIn list/patch, Public habits/stats, SharedBadge issue.
+   - 패턴은 기존 `*DocsTest` 참고. 기존 테스트의 주의점 네 가지는 `docs/RESUME.md` 와 `memory/test_and_ci.md` 참조.
+
+6. **Testcontainers 재사용 캐싱** — 현재 로컬은 `.withReuse(true)` 지만 CI는 매번 `postgres:16-alpine` 풀. `setup-gradle` 캐시로 완화되지만, 필요 시 경량 이미지(`gvenzl/oci-postgres`) 전환 고려.
+
+> 세션 단위로 이어서 작업할 때는 `docs/RESUME.md` 를 먼저 확인하세요 — 현재 상태 / 빠른 재개 명령 / 세션 간 유지할 gotcha 목록이 들어 있습니다.
 
 ## 사용 예시 — README 뱃지 삽입
 
