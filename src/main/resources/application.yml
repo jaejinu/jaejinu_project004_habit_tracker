@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: habit-tracker
+  profiles:
+    active: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  jackson:
+    time-zone: UTC
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,image/svg+xml
+    min-response-size: 512
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-to-a-long-random-value-at-least-256-bits-for-hs256}
+      access-token-ttl: PT1H
+      refresh-token-ttl: P14D
+  rate-limit:
+    anonymous-per-hour: 60
+    authenticated-per-hour: 1000
+  badge:
+    cache-ttl: PT1H
+  scheduler:
+    enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
