@@ -2,9 +2,7 @@ package com.habit.infra.security;
 
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties(prefix = "app.security.jwt")
 public class JwtProperties {
 
