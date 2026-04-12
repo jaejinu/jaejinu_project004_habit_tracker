@@ -26,10 +26,10 @@ jobs:
           java-version: '21'
 
       - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
+        uses: gradle/actions/wrapper-validation@v6
 
       - name: Setup Gradle (cache)
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Compile
         run: ./gradlew --no-daemon compileJava compileTestJava
@@ -83,7 +83,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle (cache)
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build bootBuildImage
         run: ./gradlew --no-daemon bootBuildImage --imageName=habit-tracker:${{ github.sha }}
