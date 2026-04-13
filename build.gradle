@@ -54,7 +54,7 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
 
     // PDF (OpenPDF)
-    implementation 'com.github.librepdf:openpdf:2.0.3'
+    implementation 'com.github.librepdf:openpdf:3.0.3'
 
     // Prometheus
     implementation 'io.micrometer:micrometer-registry-prometheus'
